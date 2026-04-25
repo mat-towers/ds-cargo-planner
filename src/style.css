@@ -1,0 +1,76 @@
+body {
+  margin: 0;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  background: #f5f7f9;
+  color: #1f2a30;
+}
+
+#app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.planner-layout h1 {
+  margin: 0 0 16px;
+}
+
+.summary {
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.cargo-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  margin-bottom: 18px;
+}
+
+.cargo-table th,
+.cargo-table td {
+  border: 1px solid #d5dde3;
+  padding: 10px;
+  text-align: left;
+}
+
+.cargo-table th {
+  background: #e8edf2;
+}
+
+.rendered-form {
+  display: grid;
+  gap: 12px;
+  background: #fff;
+  padding: 16px;
+  border: 1px solid #d5dde3;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.btn-add {
+  width: fit-content;
+  padding: 8px 14px;
+  border: none;
+  background: #19566f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-add:hover {
+  background: #123d4f;
+}
+
+.form-message {
+  min-height: 20px;
+  margin: 0;
+  color: #1e5f2d;
+}
+
+.form-message.error {
+  color: #9f1a1a;
+}
