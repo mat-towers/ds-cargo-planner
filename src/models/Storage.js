@@ -1,21 +1,22 @@
 class Storage {
-  constructor(Vehicle) {
-    this.cargo = [];
-    this.vehicle = Vehicle;
-    this.currentAvailableStorage = this.vehicle.getCapacity();
+  constructor(vehicle) {
+    this.orders = [];
+    this.vehicle = vehicle; // [name, capacity]
+    this.currentAvailableStorage = this.vehicle[1];
   }
 
-  addCargo(cargo) {
-    if (cargo.getSize() <= this.currentAvailableStorage) {
-      this.cargo.push(cargo);
-      this.currentAvailableStorage -= cargo.getSize();
-    } else {
-      console.log("Not enough storage available for this cargo.");
+  addOrder(order) {
+    const orderSize = order.getSize();
+    this.orders.push(order);
+    this.currentAvailableStorage -= orderSize;
+
+    if (this.currentAvailableStorage < 0) {
+      return true; // Storage is full
     }
   }
 
-  getCargo() {
-    return this.cargo;
+  getOrders() {
+    return this.orders;
   }
 
   getCurrentAvailableStorage() {

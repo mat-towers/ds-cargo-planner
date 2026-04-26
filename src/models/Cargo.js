@@ -1,63 +1,43 @@
-import { cargoTypes, typesDimensions } from "../constants/cargoTypes.js";
+import {
+  cargoTypes,
+  typesDimensions,
+  scu_conversion,
+} from "../constants/cargoTypes.js";
 
 class Cargo {
-  constructor(material, amount) {
-    this.material = material;
-    this.amount = amount;
-    this.displayedDimension = this.#calculateDimension();
-    this.convertedDimension = this.#convertDimension();
+  constructor(cargoContent, isMaterial, boxes) {
+    this.cargoContent = cargoContent; // TODO: handle not given name
+    this.isMaterial = isMaterial; // True || False
+    this.boxes = boxes || [0, 0, 0, 0, 0, 0, 0]; // [0, 0, 0, 0, 0, 0, 0]
+    this.occupiedSpace = this.#occupiedSpace(boxes);
   }
 
-  #calculateDimension() {
-    const type = cargoTypes[this.material];
-    if (!type) {
-      throw new Error("Invalid material type");
+  #occupiedSpace(boxes) {
+    let total = 0;
+    for (let i = 0; i < boxes.length; i++) {
+      total += boxes[i] * scu_conversion[i];
     }
-    for (let i = 0; i < 7; i++) {
-      if (this.amount === type[i]) {
-        return typesDimensions[i];
-        break;
+    return total;
+  }
+
+  materialDistribution(amount) {
+    let distribution = [0, 0, 0, 0, 0, 0, 0];
+
+    for (let i = distribution.length - 1; i >= 0; i--) {
+      let calc = Math.trunc(amount / cargoTypes[this.cargoContent][i]);
+      if (calc > 0) {
+        distribution[i] = calc;
+        amount -= calc * cargoTypes[this.cargoContent][i];
       }
     }
-  }
-
-  #convertDimension() {
-    // -- Scu conversion --
-    //    Small (S), 1 S
-    //    Medium (M), 2 S
-    //    Large (L), 4 S
-    //    Extra Large (XL to XL3), 6 S
-
-    switch (this.displayedDimension) {
-      case "S":
-        return 1;
-      case "M":
-        return 2;
-      case "L":
-        return 4;
-      case "XL":
-        return 6;
-      case "XL1":
-        return 6;
-      case "XL2":
-        return 6;
-      case "XL3":
-        return 6;
-      default:
-        throw new Error("Invalid displayed dimension");
+    if (amount > 0) {
+      distribution[0] += 1; // TODO: Ensure this works. If there is remaining amount, add one of the smallest boxes
     }
+    return distribution;
   }
 
-  getSize() {
-    return this.convertedDimension;
-  }
-
-  getMaterial() {
-    return this.material;
-  }
-
-  getAmount() {
-    return this.amount;
+  getOccupiedSpace() {
+    return this.occupiedSpace;
   }
 }
 

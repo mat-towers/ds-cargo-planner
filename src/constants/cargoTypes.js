@@ -15,3 +15,5 @@ export const typesDimensions = {
   5: "XL2",
   6: "XL3",
 };
+
+export const scu_conversion = [1, 2, 4, 6, 6, 6, 6];
