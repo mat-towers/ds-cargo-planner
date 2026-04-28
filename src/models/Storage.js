@@ -1,22 +1,41 @@
 class Storage {
   constructor(vehicle) {
     this.orders = [];
-    this.vehicle = vehicle; // [name, capacity]
+    this.vehicle = vehicle;
     this.currentAvailableStorage = this.vehicle[1];
   }
 
   addOrder(order) {
-    const orderSize = order.getSize();
+    const orderSize = order.getTotalSCU();
+    if (orderSize > this.currentAvailableStorage) {
+      return false;
+    }
+
     this.orders.push(order);
     this.currentAvailableStorage -= orderSize;
+    return true;
+  }
 
-    if (this.currentAvailableStorage < 0) {
-      return true; // Storage is full
+  removeOrderAt(index) {
+    if (index < 0 || index >= this.orders.length) {
+      return false;
     }
+
+    const [removedOrder] = this.orders.splice(index, 1);
+    this.currentAvailableStorage += removedOrder.getTotalSCU();
+    return true;
   }
 
   getOrders() {
     return this.orders;
+  }
+
+  getVehicleCapacity() {
+    return this.vehicle[1];
+  }
+
+  getUsedStorage() {
+    return this.getVehicleCapacity() - this.currentAvailableStorage;
   }
 
   getCurrentAvailableStorage() {

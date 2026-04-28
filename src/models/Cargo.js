@@ -1,15 +1,20 @@
-import {
-  cargoTypes,
-  typesDimensions,
-  scu_conversion,
-} from "../constants/cargoTypes.js";
+import { cargoTypes, scu_conversion } from "../constants/cargoTypes.js";
 
 class Cargo {
-  constructor(cargoContent, isMaterial, boxes) {
-    this.cargoContent = cargoContent; // TODO: handle not given name
-    this.isMaterial = isMaterial; // True || False
-    this.boxes = boxes || [0, 0, 0, 0, 0, 0, 0]; // [0, 0, 0, 0, 0, 0, 0]
-    this.occupiedSpace = this.#occupiedSpace(boxes);
+  constructor({ cargoContent, isMaterial, boxes, amount }) {
+    this.cargoContent = cargoContent;
+    this.isMaterial = Boolean(isMaterial);
+    this.materialAmount = null;
+
+    if (this.isMaterial) {
+      const parsedAmount = Number(amount);
+      this.materialAmount = parsedAmount;
+      this.boxes = this.materialDistribution(parsedAmount);
+    } else {
+      this.boxes = this.#normalizeBoxes(boxes);
+    }
+
+    this.occupiedSpace = this.#occupiedSpace(this.boxes);
   }
 
   #occupiedSpace(boxes) {
@@ -20,20 +25,63 @@ class Cargo {
     return total;
   }
 
+  #normalizeBoxes(boxes) {
+    const normalized = [0, 0, 0, 0, 0, 0, 0];
+    if (!Array.isArray(boxes)) {
+      return normalized;
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const value = Number(boxes[i]);
+      normalized[i] =
+        Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0;
+    }
+
+    return normalized;
+  }
+
   materialDistribution(amount) {
+    const values = cargoTypes[this.cargoContent];
+    if (!values) {
+      throw new Error("Invalid material type selected.");
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("Material amount must be greater than 0.");
+    }
+
     let distribution = [0, 0, 0, 0, 0, 0, 0];
+    let remainingAmount = amount;
 
     for (let i = distribution.length - 1; i >= 0; i--) {
-      let calc = Math.trunc(amount / cargoTypes[this.cargoContent][i]);
+      let calc = Math.trunc(remainingAmount / values[i]);
       if (calc > 0) {
         distribution[i] = calc;
-        amount -= calc * cargoTypes[this.cargoContent][i];
+        remainingAmount -= calc * values[i];
       }
     }
-    if (amount > 0) {
-      distribution[0] += 1; // TODO: Ensure this works. If there is remaining amount, add one of the smallest boxes
+
+    if (remainingAmount > 0) {
+      distribution[0] += 1;
     }
+
     return distribution;
+  }
+
+  getCargoContent() {
+    return this.cargoContent;
+  }
+
+  getBoxes() {
+    return [...this.boxes];
+  }
+
+  getIsMaterial() {
+    return this.isMaterial;
+  }
+
+  getMaterialAmount() {
+    return this.materialAmount;
   }
 
   getOccupiedSpace() {

@@ -1,11 +1,16 @@
 class Order {
   static nextOrderId = 1;
 
+  static resetOrderIds() {
+    Order.nextOrderId = 1;
+  }
+
   constructor(orderName, cargoList) {
     this.orderId = Order.nextOrderId++;
-    this.orderName = orderName;
-    this.cargoList = cargoList;
+    this.orderName = orderName || `Order ${this.orderId}`;
+    this.cargoList = Array.isArray(cargoList) ? cargoList : [];
     this.totalSCU = 0;
+    this.#calculateTotalSCU();
   }
 
   #calculateTotalSCU() {
@@ -19,12 +24,31 @@ class Order {
   addCargo(cargo) {
     this.cargoList.push(cargo);
     this.#calculateTotalSCU();
-
-    console.log(`Cargo added to order ${this.orderId}. Total SCU: ${this.totalSCU}`); // NOTE: for debugging
   }
-  
-  getTotalSCU() {
+
+  removeCargoAt(index) {
+    if (index < 0 || index >= this.cargoList.length) {
+      return false;
+    }
+
+    this.cargoList.splice(index, 1);
     this.#calculateTotalSCU();
+    return true;
+  }
+
+  isEmpty() {
+    return this.cargoList.length === 0;
+  }
+
+  getOrderId() {
+    return this.orderId;
+  }
+
+  getOrderName() {
+    return this.orderName;
+  }
+
+  getTotalSCU() {
     return this.totalSCU;
   }
 

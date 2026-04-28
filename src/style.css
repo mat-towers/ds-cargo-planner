@@ -1,76 +1,180 @@
+:root {
+    --bg: #f4f1ea;
+    --card: #fffdf8;
+    --border: #d6cebf;
+    --text: #2b2a28;
+    --muted: #6a6258;
+    --accent: #0f5f4f;
+    --accent-hover: #0b4b3e;
+    --danger: #9f1a1a;
+}
+
 body {
-  margin: 0;
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
-  background: #f5f7f9;
-  color: #1f2a30;
+    margin: 0;
+    font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at top right, #e3efe8 0%, transparent 32%),
+        radial-gradient(circle at top left, #f4e5d3 0%, transparent 34%),
+        var(--bg);
+    color: var(--text);
 }
 
 #app {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 24px 16px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 44px;
 }
 
-.planner-layout h1 {
-  margin: 0 0 16px;
+.planner-layout {
+    display: grid;
+    gap: 16px;
+}
+
+h1,
+h2 {
+    margin: 0;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+h2 {
+    font-size: 1.2rem;
+}
+
+.panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.panel-header {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.compact-form {
+    display: grid;
+    gap: 8px;
+    max-width: 360px;
+}
+
+.form-grid {
+    margin-top: 10px;
+    display: grid;
+    gap: 8px;
+}
+
+.box-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 6px;
+}
+
+label {
+    font-weight: 600;
+    color: var(--muted);
+}
+
+input,
+select,
+button {
+    font: inherit;
+}
+
+input,
+select {
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--text);
+}
+
+button {
+    padding: 9px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #ffffff;
+    cursor: pointer;
+    width: fit-content;
+}
+
+button:hover {
+    background: var(--accent-hover);
+}
+
+.row-remove-button {
+    background: #7a1f1f;
+}
+
+.row-remove-button:hover {
+    background: #5b1616;
+}
+
+.status-message {
+    margin: 0;
+    min-height: 20px;
+    color: #19663b;
+    font-weight: 600;
+}
+
+.status-message.error {
+    color: var(--danger);
 }
 
 .summary {
-  margin-bottom: 14px;
-  font-weight: 600;
+    margin: 10px 0 0;
+    color: var(--muted);
 }
 
 .cargo-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  margin-bottom: 18px;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    background: #ffffff;
 }
 
 .cargo-table th,
 .cargo-table td {
-  border: 1px solid #d5dde3;
-  padding: 10px;
-  text-align: left;
+    border: 1px solid var(--border);
+    padding: 9px;
+    text-align: left;
 }
 
 .cargo-table th {
-  background: #e8edf2;
+    background: #ece5d8;
 }
 
-.rendered-form {
-  display: grid;
-  gap: 12px;
-  background: #fff;
-  padding: 16px;
-  border: 1px solid #d5dde3;
+.order-details-list {
+    margin: 8px 0 0;
+    padding-left: 20px;
+    color: var(--muted);
 }
 
-.form-control {
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
+details>summary {
+    cursor: pointer;
 }
 
-.btn-add {
-  width: fit-content;
-  padding: 8px 14px;
-  border: none;
-  background: #19566f;
-  color: #fff;
-  cursor: pointer;
-}
+@media (max-width: 860px) {
+    .panel-grid {
+        grid-template-columns: 1fr;
+    }
 
-.btn-add:hover {
-  background: #123d4f;
-}
-
-.form-message {
-  min-height: 20px;
-  margin: 0;
-  color: #1e5f2d;
-}
-
-.form-message.error {
-  color: #9f1a1a;
+    .box-grid {
+        grid-template-columns: 1fr;
+    }
 }
