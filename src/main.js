@@ -16,6 +16,11 @@ document.querySelector("#app").innerHTML = `
       <select id="vehicle-select" name="vehicle-select"></select>
     </form>
 
+    <section class="panel compact-form">
+      <label for="order-name">Order Name</label>
+      <input id="order-name" name="order-name" type="text" placeholder="Optional name for the current order" />
+    </section>
+
     <p id="status-message" class="status-message" aria-live="polite"></p>
 
     <div class="panel-grid">
@@ -106,7 +111,7 @@ const materialForm = document.querySelector("#material-form");
 const materialTypeSelect = document.querySelector("#material-type");
 const materialAmountInput = document.querySelector("#material-amount");
 const standardForm = document.querySelector("#standard-form");
-const standardNameInput = document.querySelector("#standard-name");
+const orderNameInput = document.querySelector("#order-name");
 const statusMessage = document.querySelector("#status-message");
 const orderTableBody = document.querySelector("#order-table-body");
 const storageTableBody = document.querySelector("#storage-table-body");
@@ -137,6 +142,10 @@ function populateMaterialOptions() {
 
 function createEmptyOrder() {
   return new Order("Current Order", []);
+}
+
+function syncCurrentOrderName() {
+  currentOrder.setOrderName(orderNameInput.value.trim());
 }
 
 function setStatusMessage(text, isError = false) {
@@ -282,6 +291,7 @@ function resetForVehicle(vehicleKey) {
   storage = new Storage(vehicles[currentVehicleKey]);
   Order.resetOrderIds();
   currentOrder = createEmptyOrder();
+  orderNameInput.value = "";
   standardCargoCounter = 1;
   setStatusMessage("Vehicle changed. Storage and order have been reset.");
   renderAll();
@@ -317,8 +327,7 @@ standardForm.addEventListener("submit", (event) => {
     return;
   }
 
-  const customName = standardNameInput.value.trim();
-  const cargoName = customName || `cargo${standardCargoCounter++}`;
+  const cargoName = `cargo${standardCargoCounter++}`;
 
   const standardCargo = new Cargo({
     cargoContent: cargoName,
@@ -329,10 +338,6 @@ standardForm.addEventListener("submit", (event) => {
   currentOrder.addCargo(standardCargo);
   setStatusMessage("Standard cargo added to current order.");
   standardForm.reset();
-  document.querySelector("#box-s").value = 0;
-  document.querySelector("#box-m").value = 0;
-  document.querySelector("#box-l").value = 0;
-  document.querySelector("#box-xl").value = 0;
   renderAll();
 });
 
@@ -386,6 +391,8 @@ commitOrderButton.addEventListener("click", () => {
     return;
   }
 
+  syncCurrentOrderName();
+
   const committed = storage.addOrder(currentOrder);
   if (!committed) {
     setStatusMessage("Not enough storage for this order.", true);
@@ -394,11 +401,16 @@ commitOrderButton.addEventListener("click", () => {
 
   setStatusMessage("Order committed to storage.");
   currentOrder = createEmptyOrder();
+  orderNameInput.value = "";
   renderAll();
 });
 
 vehicleSelect.addEventListener("change", () => {
   resetForVehicle(vehicleSelect.value);
+});
+
+orderNameInput.addEventListener("input", () => {
+  syncCurrentOrderName();
 });
 
 populateVehicleOptions();

@@ -48,6 +48,10 @@ class Order {
     return this.orderName;
   }
 
+  setOrderName(orderName) {
+    this.orderName = orderName || "Current Order";
+  }
+
   getTotalSCU() {
     return this.totalSCU;
   }
