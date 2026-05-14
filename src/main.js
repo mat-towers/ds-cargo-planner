@@ -114,9 +114,9 @@ document.querySelector("#app").innerHTML = `
               <th>M</th>
               <th>L</th>
               <th>XL</th>
-              <th>2XL</th>
-              <th>3XL</th>
-              <th>4XL</th>
+              <th>XL1</th>
+              <th>XL2</th>
+              <th>XL3</th>
             </tr>
           </thead>
           <tbody id="storage-summary-table-body"></tbody>
@@ -135,7 +135,9 @@ const orderNameInput = document.querySelector("#order-name");
 const statusMessage = document.querySelector("#status-message");
 const orderTableBody = document.querySelector("#order-table-body");
 const storageTableBody = document.querySelector("#storage-table-body");
-const storageSummaryTableBody = document.querySelector("#storage-summary-table-body");
+const storageSummaryTableBody = document.querySelector(
+  "#storage-summary-table-body",
+);
 const orderSummary = document.querySelector("#order-summary");
 const storageSummary = document.querySelector("#storage-summary");
 const commitOrderButton = document.querySelector("#commit-order-button");
@@ -189,7 +191,20 @@ function getStandardBoxesFromForm() {
 }
 
 function boxesPreview(boxes) {
-  return `${boxes[0]}, ${boxes[1]}, ${boxes[2]}, ${boxes[3]}`;
+  const visibleBoxes = boxes
+    .map((count, index) => {
+      const dimension = typesDimensions[index];
+      return { count, dimension };
+    })
+    .filter((box) => box.count > 0);
+
+  if (!visibleBoxes.length) {
+    return "-";
+  }
+
+  return visibleBoxes
+    .map((box) => `${box.dimension}: ${box.count}`)
+    .join(" | ");
 }
 
 function materialBoxesPreview(cargo) {
@@ -260,22 +275,28 @@ function renderStorageTable() {
   const orders = storage.getOrders();
   if (!orders.length) {
     storageTableBody.innerHTML =
-      '<tr><td colspan="4">No orders committed to storage.</td></tr>';
+      '<tr><td colspan="5">No orders committed to storage.</td></tr>';
     return;
   }
 
   storageTableBody.innerHTML = orders
-    .map((order, index) => {
+    .map((order, orderIndex) => {
+      const isEnabled = storage.isOrderEnabled(orderIndex);
       const cargoItems = order
         .getCargoList()
         .map(
-          (cargo) =>
-            `<li>${getCargoEntryName(cargo)} | ${cargo.getIsMaterial() ? "Material" : "Standard"} | Boxes: [${boxesDisplayForCargo(cargo)}] | ${cargo.getOccupiedSpace()} SCU</li>`,
+          (cargo, cargoIndex) =>
+            `<li>${getCargoEntryName(cargo)} | ${boxesDisplayForCargo(cargo)} | ${cargo.getOccupiedSpace()} SCU <button type="button" class="item-remove-button" data-order-index="${orderIndex}" data-cargo-index="${cargoIndex}">Remove Item</button></li>`,
         )
         .join("");
 
+      const toggleButtonText = isEnabled ? "Disable" : "Enable";
+      const toggleButtonClass = isEnabled
+        ? "order-toggle-button"
+        : "order-toggle-button disabled";
+
       return `
-        <tr>
+        <tr ${!isEnabled ? 'class="order-disabled"' : ""}>
           <td>
             <details>
               <summary>${order.getOrderName()} #${order.getOrderId()}</summary>
@@ -284,7 +305,10 @@ function renderStorageTable() {
           </td>
           <td>${order.getCargoList().length}</td>
           <td>${order.getTotalSCU()}</td>
-          <td><button type="button" class="row-remove-button" data-remove-storage-order-index="${index}">Remove</button></td>
+          <td class="order-actions">
+            <button type="button" class="${toggleButtonClass}" data-toggle-order-index="${orderIndex}">${toggleButtonText}</button>
+            <button type="button" class="row-remove-button" data-remove-storage-order-index="${orderIndex}">Delete</button>
+          </td>
         </tr>
       `;
     })
@@ -334,7 +358,7 @@ function renderStorageSummaryTable() {
   // Create table rows
   storageSummaryTableBody.innerHTML = Array.from(itemMap.values())
     .map((item) => {
-      const dimensionLabels = ["S", "M", "L", "XL", "2XL", "3XL", "4XL"];
+      const dimensionLabels = ["S", "M", "L", "XL", "XL1", "XL2", "XL3"];
       const dimensionCells = item.boxes
         .map((quantity, index) => {
           if (item.isMaterial) {
@@ -368,9 +392,24 @@ function renderSummaries() {
   const vehicleCapacity = storage.getVehicleCapacity();
   const usedStorage = storage.getUsedStorage();
   const availableStorage = storage.getCurrentAvailableStorage();
+  const overweight = storage.getOverweight();
 
   orderSummary.textContent = `Current order cargo: ${currentOrder.getCargoList().length} | Current order SCU: ${currentOrder.getTotalSCU()}`;
-  storageSummary.textContent = `Vehicle: ${vehicleName} | Capacity: ${vehicleCapacity} SCU | Used: ${usedStorage} SCU | Available: ${availableStorage} SCU | Committed orders: ${storage.getOrders().length}`;
+
+  let capacityText =
+    overweight > 0
+      ? `Overweight: ${overweight} SCU`
+      : `Available: ${availableStorage} SCU`;
+  let storageSummaryText = `Vehicle: ${vehicleName} | Capacity: ${vehicleCapacity} SCU | Used: ${usedStorage} SCU | ${capacityText} | Committed orders: ${storage.getOrders().length}`;
+
+  storageSummary.textContent = storageSummaryText;
+
+  // Add red color if overweight
+  if (overweight > 0) {
+    storageSummary.classList.add("overweight");
+  } else {
+    storageSummary.classList.remove("overweight");
+  }
 }
 
 function renderAll() {
@@ -463,20 +502,45 @@ storageTableBody.addEventListener("click", (event) => {
     return;
   }
 
+  // Handle toggle order enable/disable
+  const toggleOrderIndexValue = target.getAttribute("data-toggle-order-index");
+  if (toggleOrderIndexValue !== null) {
+    const orderIndex = Number(toggleOrderIndexValue);
+    storage.toggleOrderAt(orderIndex);
+    setStatusMessage("Order enabled/disabled.");
+    renderAll();
+    return;
+  }
+
+  // Handle remove cargo item from order
+  const orderIndexValue = target.getAttribute("data-order-index");
+  const cargoIndexValue = target.getAttribute("data-cargo-index");
+  if (orderIndexValue !== null && cargoIndexValue !== null) {
+    const orderIndex = Number(orderIndexValue);
+    const cargoIndex = Number(cargoIndexValue);
+    const removed = storage.removeCargoFromOrderAt(orderIndex, cargoIndex);
+    if (!removed) {
+      setStatusMessage("Could not remove cargo item.", true);
+      return;
+    }
+    setStatusMessage("Cargo item removed from order.");
+    renderAll();
+    return;
+  }
+
+  // Handle remove entire order
   const indexValue = target.getAttribute("data-remove-storage-order-index");
-  if (indexValue === null) {
+  if (indexValue !== null) {
+    const index = Number(indexValue);
+    const removed = storage.removeOrderAt(index);
+    if (!removed) {
+      setStatusMessage("Could not remove storage entry.", true);
+      return;
+    }
+    setStatusMessage("Order deleted from storage.");
+    renderAll();
     return;
   }
-
-  const index = Number(indexValue);
-  const removed = storage.removeOrderAt(index);
-  if (!removed) {
-    setStatusMessage("Could not remove storage entry.", true);
-    return;
-  }
-
-  setStatusMessage("Entry removed from storage.");
-  renderAll();
 });
 
 commitOrderButton.addEventListener("click", () => {
@@ -489,7 +553,7 @@ commitOrderButton.addEventListener("click", () => {
 
   const committed = storage.addOrder(currentOrder);
   if (!committed) {
-    setStatusMessage("Not enough storage for this order.", true);
+    setStatusMessage("Error adding order to storage.", true);
     return;
   }
 
