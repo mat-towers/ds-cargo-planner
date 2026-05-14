@@ -159,6 +159,67 @@ button:hover {
     background: #ece5d8;
 }
 
+.storage-summary-title {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.storage-summary-container {
+    overflow-x: auto;
+}
+
+.storage-summary-table {
+    font-size: 0.9rem;
+}
+
+.storage-summary-table th {
+    background: #e8dccf;
+    font-weight: 600;
+    padding: 8px 6px;
+}
+
+.storage-summary-table td {
+    padding: 8px 6px;
+    text-align: center;
+}
+
+.storage-summary-table .item-name {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.storage-summary-table .item-type {
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.storage-summary-table .dimension-cell {
+    background: #fafaf8;
+    font-variant-numeric: tabular-nums;
+}
+
+.storage-summary-table .dimension-cell .material-amount {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.storage-summary-table .dimension-cell .material-qty {
+    color: var(--muted);
+    font-size: 0.9em;
+}
+
+.storage-summary-table tbody tr:nth-child(even) .dimension-cell {
+    background: #f5f2ed;
+}
+
+.storage-summary-table tbody tr:hover .dimension-cell {
+    background: #ebe3d9;
+}
+
 .order-details-list {
     margin: 8px 0 0;
     padding-left: 20px;

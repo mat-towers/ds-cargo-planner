@@ -102,6 +102,26 @@ document.querySelector("#app").innerHTML = `
         </thead>
         <tbody id="storage-table-body"></tbody>
       </table>
+
+      <h3 class="storage-summary-title">Storage Contents by Dimension</h3>
+      <div class="storage-summary-container">
+        <table class="cargo-table storage-summary-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Type</th>
+              <th>S</th>
+              <th>M</th>
+              <th>L</th>
+              <th>XL</th>
+              <th>2XL</th>
+              <th>3XL</th>
+              <th>4XL</th>
+            </tr>
+          </thead>
+          <tbody id="storage-summary-table-body"></tbody>
+        </table>
+      </div>
     </section>
   </div>
 `;
@@ -115,6 +135,7 @@ const orderNameInput = document.querySelector("#order-name");
 const statusMessage = document.querySelector("#status-message");
 const orderTableBody = document.querySelector("#order-table-body");
 const storageTableBody = document.querySelector("#storage-table-body");
+const storageSummaryTableBody = document.querySelector("#storage-summary-table-body");
 const orderSummary = document.querySelector("#order-summary");
 const storageSummary = document.querySelector("#storage-summary");
 const commitOrderButton = document.querySelector("#commit-order-button");
@@ -270,6 +291,78 @@ function renderStorageTable() {
     .join("");
 }
 
+function renderStorageSummaryTable() {
+  const orders = storage.getOrders();
+  if (!orders.length) {
+    storageSummaryTableBody.innerHTML =
+      '<tr><td colspan="9">No items in storage.</td></tr>';
+    return;
+  }
+
+  // Collect all items with their quantities by dimension
+  const itemMap = new Map(); // key: itemName, value: { type, boxes: [7 dimensions] }
+
+  orders.forEach((order) => {
+    order.getCargoList().forEach((cargo) => {
+      const isMaterial = cargo.getIsMaterial();
+      const itemName = cargo.getCargoContent();
+      const itemKey = `${isMaterial ? "MAT" : "CARGO"}:${itemName}`;
+      const boxes = cargo.getBoxes();
+
+      if (!itemMap.has(itemKey)) {
+        itemMap.set(itemKey, {
+          name: itemName,
+          type: isMaterial ? "Material" : "Cargo",
+          isMaterial,
+          boxes: [0, 0, 0, 0, 0, 0, 0],
+        });
+      }
+
+      const item = itemMap.get(itemKey);
+      for (let i = 0; i < boxes.length; i++) {
+        item.boxes[i] += boxes[i];
+      }
+    });
+  });
+
+  if (itemMap.size === 0) {
+    storageSummaryTableBody.innerHTML =
+      '<tr><td colspan="9">No items in storage.</td></tr>';
+    return;
+  }
+
+  // Create table rows
+  storageSummaryTableBody.innerHTML = Array.from(itemMap.values())
+    .map((item) => {
+      const dimensionLabels = ["S", "M", "L", "XL", "2XL", "3XL", "4XL"];
+      const dimensionCells = item.boxes
+        .map((quantity, index) => {
+          if (item.isMaterial) {
+            // For materials, show both the amount per box and the quantity
+            const materialValues = cargoTypes[item.name] || [];
+            const amountPerBox = materialValues[index] || 0;
+            if (quantity > 0 && amountPerBox > 0) {
+              return `<td class="dimension-cell"><span class="material-amount">${amountPerBox}</span> <span class="material-qty">(${quantity})</span></td>`;
+            }
+            return `<td class="dimension-cell">—</td>`;
+          } else {
+            // For cargo, show the box count
+            return `<td class="dimension-cell">${quantity > 0 ? quantity : "—"}</td>`;
+          }
+        })
+        .join("");
+
+      return `
+        <tr>
+          <td class="item-name">${item.name}</td>
+          <td class="item-type">${item.type}</td>
+          ${dimensionCells}
+        </tr>
+      `;
+    })
+    .join("");
+}
+
 function renderSummaries() {
   const vehicleName = vehicles[currentVehicleKey][0];
   const vehicleCapacity = storage.getVehicleCapacity();
@@ -283,6 +376,7 @@ function renderSummaries() {
 function renderAll() {
   renderOrderTable();
   renderStorageTable();
+  renderStorageSummaryTable();
   renderSummaries();
 }
 
